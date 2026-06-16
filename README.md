@@ -1,15 +1,32 @@
-# 🪐 DSA Discussions
+<!-- markdownlint-disable MD033 MD041 -->
+<img align="right" src="https://visitor-badge.laobi.icu/badge?page_id=ananya-09.DSA-Discussions">
 
 <div align="center">
-
-[![Repo Size](https://img.shields.io/github/repo-size/ananya-09/DSA-Problem-Solutions?color=FFE75E&style=flat-square)](https://github.com/ananya-09/DSA-Discussions)
-[![Discussions](https://img.shields.io/github/discussions/ananya-09/DSA-Problem-Solutions?color=00B8A9&style=flat-square)](https://github.com/ananya-09/DSA-Discussions/discussions)
-
-An elegant, community-driven ecosystem designed for mastering Data Structures and Algorithms. We store our core conceptual notes and code in the repository, while hosting active bug-hunting, contest strategies, and milestone celebrations in the Discussions tab.
-
-[Explore Repository Folders](#-the-vault-repository-structure) • [Join the Discussions](#-the-forum-github-discussions-guide) • [Contribution Guidelines](#-how-we-collaborate)
-
+  <a href="https://git.io/typing-svg">
+    <img src="https://readme-typing-svg.demolab.com?font=Bitcount+Prop+Double&weight=500&height=100&size=28&pause=1000&color=0EB397FF&background=00000000&center=true&width=600&height=100&lines=Hello+There!+%F0%9F%91%8B;This+is+Ananya+%F0%9F%92%AB;Welcome+to+%F0%9F%AA%90+DSA+Discussions!;Let's+Dive+in+to+Tech" alt="DSA Discussions Typing SVG" />
+  </a>
 </div>
+
+<div align="center">
+  <a href="https://github.com/ananya-09/DSA-Discussions">
+    <img src="https://img.shields.io/github/repo-size/ananya-09/DSA-Discussions?color=FFE75E&style=flat-square" alt="Repo Size">
+  </a>
+  <a href="https://github.com/ananya-09/DSA-Discussions/discussions">
+    <img src="https://img.shields.io/github/discussions/ananya-09/DSA-Discussions?color=00B8A9&style=flat-square" alt="Discussions">
+  </a>
+</div>
+
+<div align="center">
+  <p>An elegant, community-driven ecosystem designed for mastering Data Structures and Algorithms. We store our core conceptual notes and code in the repository, while hosting active bug-hunting, contest strategies, and milestone celebrations in the Discussions tab.</p>
+
+  <p>
+    <a href="#-the-vault-repository-structure">Explore Repository Folders</a> • 
+    <a href="#-the-forum-github-discussions-guide">Join the Discussions</a> • 
+    <a href="#-how-we-collaborate">Contribution Guidelines</a>
+  </p>
+</div>
+
+<!-- markdownlint-enable MD033 -->
 
 ---
 
@@ -109,3 +126,4 @@ We follow a clean, collaborative engineering workflow to make sure every line of
 ---
 
 *Built with passion for the open-source community. Let's stay consistent and build beautiful commit graphs together!* 🟩
+
