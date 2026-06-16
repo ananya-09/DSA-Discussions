@@ -2,9 +2,8 @@
 
 <div align="center">
 
-[![Repo Size](https://img.shields.io/github/repo-size/ananya-09/DSA-Problem-Solutions?color=FFE75E&style=flat-square)](https://github.com/ananya-09/DSA-Problem-Solutions)
-[![Discussions](https://img.shields.io/github/discussions/ananya-09/DSA-Problem-Solutions?color=00B8A9&style=flat-square)](https://github.com/ananya-09/DSA-Problem-Solutions/discussions)
-[![License](https://img.shields.io/github/license/ananya-09/DSA-Problem-Solutions?color=FF4B5C&style=flat-square)](LICENSE)
+[![Repo Size](https://img.shields.io/github/repo-size/ananya-09/DSA-Problem-Solutions?color=FFE75E&style=flat-square)](https://github.com/ananya-09/DSA-Discussions)
+[![Discussions](https://img.shields.io/github/discussions/ananya-09/DSA-Problem-Solutions?color=00B8A9&style=flat-square)](https://github.com/ananya-09/DSA-Discussions/discussions)
 
 An elegant, community-driven ecosystem designed for mastering Data Structures and Algorithms. We store our core conceptual notes and code in the repository, while hosting active bug-hunting, contest strategies, and milestone celebrations in the Discussions tab.
 
@@ -56,38 +55,38 @@ Our repository avoids chaotic file dumps by organizing all code and resources in
 
 To prevent brilliant logic breakdowns, study notes, and debug logs from getting buried under endless message threads, our entire conversational layer lives right here in the **Discussions** tab.
 
-> ### 🤘 Chit-Chat
+> ### [🤘 Chit-Chat](https://github.com/ananya-09/DSA-Discussions/discussions/categories/chit-chat)
 > 
 > 
 > *Catch up with the squad! Share tech news, programming memes, desktop workspace setups, or just introduce yourself to the community.*
 
-> ### ❓ Doubt Box (Q&A Format)
+> ### [❓ Doubt Box (Q&A Format)](https://github.com/ananya-09/DSA-Discussions/discussions/categories/doubt-box-q-a)
 > 
 > 
 > *Stuck on an edge case, getting a TLE, or battling a segmentation fault? Paste your formatted code here and let’s debug it together. Once solved, the winning fix is pinned to the top for future readers.*
 
-> ### 🗳️ Community Polls
+> ### [🗳️ Community Polls](https://github.com/ananya-09/DSA-Discussions/discussions/categories/community-polls)
 > 
 > 
 > *Cast your vote! Help shape our coding schedules, choose next week’s DSA topics, or pick timings for group virtual contests.*
 
-> ### 💻 LeetCode Arena
+> ### [💻 LeetCode Arena](https://github.com/ananya-09/DSA-Discussions/discussions/categories/leetcode-arena)
 > 
 > 
 > *Focused on interview preparation. Discuss the LeetCode Daily Challenge, ask queries about standard sheet patterns, or deep-dive into company-specific problem sets.*
 
-> ### ⚔️ Codeforces Arena
+> ### [⚔️ Codeforces Arena](https://github.com/ananya-09/DSA-Discussions/discussions/categories/codeforces-arena)
 > 
 > 
 > *The Competitive Programming hub. Break down post-contest editorials, discuss Div 2/Div 3 speed strategies, and tackle math-heavy or advanced algorithms.*
 
-> ### 🏆 Showcase your Achievements
+> ### [🏆 Showcase your Achievements](https://github.com/ananya-09/DSA-Discussions/discussions/categories/showcase-your-achievements)
 > 
 > 
 > *The community hype zone! Celebrate your consistency streaks, LeetCode badge unlocks, Codeforces rank-ups, open-source merges, or job/internship offers.*
 
 
-> ### 💡 Tips & Tricks
+> ### [💡 Tips & Tricks](https://github.com/ananya-09/DSA-Discussions/discussions/categories/tips-tricks)
 >
 > 
 > *Share your coding superpowers! Drop fast I/O shortcuts, C++ STL hacks, Python tricks, useful IDE extensions, or math shortcuts that save valuable seconds during contests and interviews.*
