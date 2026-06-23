@@ -7,15 +7,58 @@ body:
     attributes:
       label: "📢 Important Update / Goal Title"
       placeholder: "e.g., Kicking off Mission 245 Today! 🎯"
+      description: "Be clear and specific — this helps people quickly understand the announcement."
     validations:
       required: true
+
   - type: textarea
     id: plan
     attributes:
       label: "🎯 The Plan & Timeline"
       placeholder: "What is happening, why are we doing it, and what are the crucial dates?"
+      description: "Include key milestones, dates, and context for why this matters to the community."
+    validations:
+      required: true
+
   - type: textarea
     id: participation
     attributes:
       label: "🙌 Expectations / How to Participate"
       placeholder: "What are the exact action steps for everyone in the community right now?"
+      description: "Provide clear, actionable steps so people know what to do next."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: status
+    attributes:
+      label: "📊 Status"
+      options:
+        - "🟢 Active"
+        - "🟡 In Progress"
+        - "🟠 Pending"
+        - "✅ Completed"
+        - "🔵 On Hold"
+    validations:
+      required: true
+
+  - type: textarea
+    id: resources
+    attributes:
+      label: "🔗 Resources & Links"
+      placeholder: "Links to related issues, documentation, GitHub projects, or external resources"
+      description: "Optional — helps people find more context."
+
+  - type: textarea
+    id: call_to_action
+    attributes:
+      label: "⏰ Call to Action (if applicable)"
+      placeholder: "e.g., Sign up by June 30 | RSVP in replies | Comment with your team name"
+      description: "Optional — use this if you need immediate feedback or participation."
+
+  - type: textarea
+    id: questions
+    attributes:
+      label: "❓ Questions?"
+      placeholder: "Use this space to ask the community for input or feedback."
+      description: "Optional — encourage discussion in replies."
