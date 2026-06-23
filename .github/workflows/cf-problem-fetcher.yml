@@ -35,13 +35,13 @@ jobs:
 
           body = os.getenv('DISCUSSION_BODY', '')
           
-          # Regex definitions
-          contest_match = re.search(r'### 🔢 Contest ID[\s:]*(?:\s*)?([\d]+)', body, re.DOTALL)
-          index_match = re.search(r'### 🔤 Problem Index[\s:]*(?:\s*)?([A-Z\d]+)', body, re.DOTALL)
+          # Precision Regex tailored for clean newline separation
+          contest_match = re.search(r'### 🔢 Contest ID\s*(?:\s*)?([\d]+)', body, re.DOTALL)
+          index_match = re.search(r'### 🔤 Problem Index\s*(?:\s*)?([A-Z\d]+)', body, re.DOTALL)
 
           if contest_match and index_match:
               contest_id = contest_match.group(1).strip()
-              index = index_match.group(1).strip().upper()  # Fixed from group(2) to group(1)
+              index = index_match.group(1).strip().upper()
               
               print(f"Target Found -> Contest: {contest_id}, Index: {index}")
               
