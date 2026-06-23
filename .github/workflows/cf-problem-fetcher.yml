@@ -23,7 +23,7 @@ jobs:
       - name: Install Dependencies
         run: pip install requests
 
-      - name: Fetch Problem Meta via Contest Standings API
+      - name: Fetch Problem Meta via Public Problemset API
         id: fetch_meta
         env:
           DISCUSSION_BODY: ${{ github.event.discussion.body }}
@@ -35,24 +35,28 @@ jobs:
 
           body = os.getenv('DISCUSSION_BODY', '')
           
-          # Precision Regex tailored for clean newline separation
-          contest_match = re.search(r'### 🔢 Contest ID\s*(?:\s*)?([\d]+)', body, re.DOTALL)
+          # Regex tailored to grab IDs separated cleanly by newlines
+          contest_match = re.search(r'### 🔢 Contest ID\s*(?:\s*)?(\d+)', body, re.DOTALL)
           index_match = re.search(r'### 🔤 Problem Index\s*(?:\s*)?([A-Z\d]+)', body, re.DOTALL)
 
           if contest_match and index_match:
-              contest_id = contest_match.group(1).strip()
+              # Codeforces API expects contestId as an integer matching the json data
+              contest_id = int(contest_match.group(1).strip())
               index = index_match.group(1).strip().upper()
               
               print(f"Target Found -> Contest: {contest_id}, Index: {index}")
               
-              api_url = f"https://codeforces.com/api/contest.standings?contestId={contest_id}&from=1&count=1"
+              # Using the fully public archive endpoint to bypass authentication locks entirely
+              api_url = "https://codeforces.com/api/problemset.problems"
               response = requests.get(api_url)
               
               if response.status_code == 200:
                   data = response.json()
                   if data.get('status') == 'OK':
                       problems = data['result']['problems']
-                      matched = next((p for p in problems if p.get('index') == index), None)
+                      
+                      # Find the matching problem inside the master list
+                      matched = next((p for p in problems if p.get('contestId') == contest_id and p.get('index') == index), None)
                       
                       if matched:
                           name = matched['name']
@@ -71,9 +75,9 @@ jobs:
                           
                           with open('comment_body.txt', 'w', encoding='utf-8') as f:
                               f.write(comment)
-                          print("SUCCESS: Summary compiled.")
+                          print("SUCCESS: Summary compiled using completely open public archive endpoint.")
                       else:
-                          print(f"ERROR: Problem index '{index}' not found in Contest {contest_id}.")
+                          print(f"ERROR: Problem index '{index}' not found in Contest {contest_id} archive pool.")
                   else:
                       print(f"ERROR: Codeforces API returned status: {data.get('comment')}")
               else:
