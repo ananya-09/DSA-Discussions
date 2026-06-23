@@ -1,0 +1,98 @@
+name: 🤖 Codeforces Problem Fetcher
+
+on:
+  discussion:
+    types: [created]
+
+jobs:
+  fetch-cf-metadata:
+    if: github.event.discussion.category.slug == 'codeforces-arena'
+    runs-on: ubuntu-latest
+    permissions:
+      discussions: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install Dependencies
+        run: pip install requests
+
+      - name: Fetch Problem Meta via Contest Standings API
+        id: fetch_meta
+        env:
+          DISCUSSION_BODY: ${{ github.event.discussion.body }}
+        shell: python
+        run: |
+          import os
+          import requests
+          import re
+
+          body = os.getenv('DISCUSSION_BODY', '')
+          
+          # Upgraded Regex to safely step past markdown headers and HTML helper comments
+          contest_match = re.search(r'### 🔢 Contest ID\s*(?:\s*)?([\d]+)', body, re.DOTALL)
+          index_match = re.search(r'### 🔤 Problem Index\s*(?:\s*)?([A-Z\d]+)', body, re.DOTALL)
+
+          if contest_match and index_match:
+              contest_id = contest_match.group(1).strip()
+              index = index_match.group(2).strip().upper()
+              
+              print(f"Target Found -> Contest: {contest_id}, Index: {index}")
+              
+              api_url = f"https://codeforces.com/api/contest.standings?contestId={contest_id}&from=1&count=1"
+              response = requests.get(api_url)
+              
+              if response.status_code == 200:
+                  data = response.json()
+                  if data.get('status') == 'OK':
+                      problems = data['result']['problems']
+                      matched = next((p for p in problems if p.get('index') == index), None)
+                      
+                      if matched:
+                          name = matched['name']
+                          rating = matched.get('rating', 'Unrated')
+                          tags = ", ".join([f"`{t}`" for t in matched.get('tags', [])]) if matched.get('tags') else "`No tags assigned yet`"
+                          url = f"https://codeforces.com/contest/{contest_id}/problem/{index}"
+                          
+                          comment = (
+                              f"### 🤖 Codeforces Automated Briefing\n\n"
+                              f"🎯 **Problem Name:** [{name}]({url})\n"
+                              f"📊 **Difficulty Rating:** `{rating}`\n"
+                              f"🏷️ **Algorithmic Tags:** {tags}\n\n"
+                              f"--- \n"
+                              f"*Happy debugging! Use this dedicated thread below to share optimized source files or alternative math insights.*"
+                          )
+                          
+                          with open('comment_body.txt', 'w', encoding='utf-8') as f:
+                              f.write(comment)
+                          print("SUCCESS: Summary compiled.")
+                      else:
+                          print(f"ERROR: Problem index '{index}' not found in Contest {contest_id}.")
+                  else:
+                      print(f"ERROR: Codeforces API returned status: {data.get('comment')}")
+              else:
+                  print(f"ERROR: Failed to connect to API. Status code: {response.status_code}")
+          else:
+              print("ERROR: Could not parse Contest ID or Problem Index from the markdown body text.")
+
+      - name: Post Summary Comment to Discussion Thread
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DISCUSSION_ID: ${{ github.event.discussion.node_id }}
+        run: |
+          if [ -f comment_body.txt ]; then
+            gh api graphql -f query='
+              mutation($discussionId: ID!, $body: String!) {
+                addDiscussionComment(input: {discussionId: $discussionId, body: $body}) {
+                  comment { id }
+                }
+              }' -f discussionId="$DISCUSSION_ID" -F body=@comment_body.txt
+          else
+            echo "Skipping comment injection: No metadata generated."
+          fi
