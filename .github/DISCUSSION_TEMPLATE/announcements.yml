@@ -1,0 +1,21 @@
+name: "📢 Announcements & Goals"
+description: "Post community-wide goals, structural updates, or timelines."
+title: "[Announcement]: "
+body:
+  - type: textarea
+    id: announcement_title
+    attributes:
+      label: "📢 Important Update / Goal Title"
+      placeholder: "e.g., Kicking off Mission 245 Today! 🎯"
+    validations:
+      required: true
+  - type: textarea
+    id: plan
+    attributes:
+      label: "🎯 The Plan & Timeline"
+      placeholder: "What is happening, why are we doing it, and what are the crucial dates?"
+  - type: textarea
+    id: participation
+    attributes:
+      label: "🙌 Expectations / How to Participate"
+      placeholder: "What are the exact action steps for everyone in the community right now?"
