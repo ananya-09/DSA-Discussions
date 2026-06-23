@@ -36,7 +36,6 @@ jobs:
 
           body = os.getenv('DISCUSSION_BODY', '')
           
-          # Updated Regex to match the new # header structure perfectly
           contest_match = re.search(r'# Contest ID\s*(?:\s*)?(\d+)', body, re.DOTALL)
           index_match = re.search(r'# Problem Index\s*(?:\s*)?([A-Z\d]+)', body, re.DOTALL)
 
@@ -112,14 +111,12 @@ jobs:
                       matched = next((p for p in problems if p.get('contestId') == int(contest_id) and p.get('index') == index), None)
                       if matched:
                           rating = matched.get('rating', 'Unrated')
-                          # Extracts the clean problem title without the index prefix string
-                          problem_name = matched.get('name', problem_name)
                           tags = ", ".join([f"`{t}`" for t in matched.get('tags', [])]) if matched.get('tags') else tags
 
               # 3. Assemble the Ultimate Markdown Template
               comment = (
                   f"## 🤖 Codeforces Automated Briefing\n\n"
-                  f"🎯 **Problem Name:** [{problem_name}]({url})\n"
+                  f"🎯 **Problem:** [{problem_name}]({url})\n"
                   f"📊 **Difficulty Rating:** `{rating}`\n"
                   f"🏷️ **Algorithmic Tags:** {tags}\n\n"
                   f"### 📄 Problem Description Preview\n"
@@ -130,17 +127,12 @@ jobs:
                   f"*Use the discussion space below to break down optimization paths or link clean repository source files!*"
               )
               
+              # Fix: Convert Codeforces triple-dollar math boundaries to native GitHub Markdown LaTeX format
               comment = comment.replace("$$$", "$")
               
-              # Save the briefing card context text
               with open('comment_body.txt', 'w', encoding='utf-8') as f:
                   f.write(comment)
-                  
-              # Save the problem name to dynamically rename the discussion title component
-              with open('problem_title.txt', 'w', encoding='utf-8') as f:
-                  f.write(problem_name)
-                  
-              print("SUCCESS: Context files compiled completely.")
+              print("SUCCESS: Full context card generated perfectly with LaTeX modifications.")
           else:
               print("ERROR: Parsing validation parameters dropped.")
 
@@ -149,19 +141,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DISCUSSION_ID: ${{ github.event.discussion.node_id }}
         run: |
-          # 1. Dynamically rename the discussion header component to match the clean problem name
-          if [ -f problem_title.txt ]; then
-            PROBLEM_TITLE=$(cat problem_title.txt)
-            gh api graphql -f query='
-              mutation($discussionId: ID!, $title: String!) {
-                updateDiscussion(input: {discussionId: $discussionId, title: $title}) {
-                  discussion { id }
-                }
-              }' -f discussionId="$DISCUSSION_ID" -f title="$PROBLEM_TITLE"
-            print "SUCCESS: Discussion renamed to $PROBLEM_TITLE"
-          fi
-
-          # 2. Inject the standard brief text block layout
           if [ -f comment_body.txt ]; then
             gh api graphql -f query='
               mutation($discussionId: ID!, $body: String!) {
