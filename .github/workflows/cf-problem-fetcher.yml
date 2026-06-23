@@ -68,12 +68,12 @@ jobs:
               
               # 1. Scrape the Problem Page for Statement & Samples
               page_response = requests.get(url)
+              statement_text = "Description unavailable."
+              samples_markdown = ""
+              problem_name = f"Problem {index}"
               
               if page_response.status_code == 200:
                   soup = BeautifulSoup(page_response.text, 'html.parser')
-                  statement_text = "Description unavailable."
-                  samples_markdown = ""
-                  problem_name = f"Problem {index}"
                   
                   title_div = soup.find('div', class_='title')
                   if title_div:
@@ -90,6 +90,7 @@ jobs:
                               continue
                           desc_paragraphs.extend(child.find_all('p'))
                       
+                      # Upgraded to pull full problem specifications instead of limiting to [:3]
                       if desc_paragraphs:
                           statement_text = "\n\n".join([p.text.strip() for p in desc_paragraphs])
                       else:
@@ -113,55 +114,50 @@ jobs:
                               samples_markdown += f"#### 📥 Sample Input {i+1}\n```text\n{in_text}\n```\n"
                               samples_markdown += f"#### 📤 Sample Output {i+1}\n```text\n{out_text}\n```\n\n"
 
-                  # 2. Query API for Official Difficulty Ratings and Tags
-                  api_url = "https://codeforces.com/api/problemset.problems"
-                  api_response = requests.get(api_url)
-                  rating = "Unrated"
-                  tags = "`No tags assigned yet`"
-                  
-                  if api_response.status_code == 200:
-                      data = api_response.json()
-                      if data.get('status') == 'OK':
-                          problems = data['result']['problems']
-                          matched = next((p for p in problems if p.get('contestId') == int(contest_id) and p.get('index') == index), None)
-                          if matched:
-                              rating = matched.get('rating', 'Unrated')
-                              problem_name = matched.get('name', problem_name)
-                              tags = ", ".join([f"`{t}`" for t in matched.get('tags', [])]) if matched.get('tags') else tags
+              # 2. Query API for Official Difficulty Ratings and Tags
+              api_url = "https://codeforces.com/api/problemset.problems"
+              api_response = requests.get(api_url)
+              rating = "Unrated"
+              tags = "`No tags assigned yet`"
+              
+              if api_response.status_code == 200:
+                  data = api_response.json()
+                  if data.get('status') == 'OK':
+                      problems = data['result']['problems']
+                      matched = next((p for p in problems if p.get('contestId') == int(contest_id) and p.get('index') == index), None)
+                      if matched:
+                          rating = matched.get('rating', 'Unrated')
+                          problem_name = matched.get('name', problem_name)
+                          tags = ", ".join([f"`{t}`" for t in matched.get('tags', [])]) if matched.get('tags') else tags
 
-                  # 3. Assemble Layout matching LeetCode structure and design
-                  comment = (
-                      f"## 🤖 Codeforces Automated Briefing\n\n"
-                      f"🎯 **Problem:** [{problem_name}]({url})\n"
-                      f"📊 **Difficulty Rating:** `{rating}`\n"
-                      f"🏷️ **Algorithmic Tags:** {tags}\n\n"
-                      f"### 📄 Problem Statement\n"
-                      f"<details>\n"
-                      f"<summary><b>📖 Click to expand Full Description & Examples</b></summary>\n\n"
-                      f"#### 📝 Description\n{statement_text}\n\n"
-                      f"### 🧪 Example Test Cases\n"
-                      f"{samples_markdown}"
-                      f"</details>\n\n"
-                      f"---\n"
-                      f"*Stay Curious! Stay Consistent! & Keep Scripting! \n"
-                      f"Use the discussion space below to share your approaches, talk about complexities, more optimized solutions, or link your solution files and much more together with the community! \n"
-                      f"Happy Coding!*"
-                  )
-                  
-                  comment = comment.replace("$$$", "$")
-                  
-                  with open('comment_body.txt', 'w', encoding='utf-8') as f:
-                      f.write(comment)
-                  with open('problem_title.txt', 'w', encoding='utf-8') as f:
-                      f.write(problem_name)
-                      
-                  print("SUCCESS: Codeforces context card compiled successfully.")
-              elif page_response.status_code == 404:
-                  print("ERROR: Problem not found. Check if the Contest ID or Problem Index is correct.")
-              else:
-                  print(f"ERROR: API Request failed with status code: {page_response.status_code}")
+              # 3. Assemble Layout matching LeetCode structure and design
+              comment = (
+                  f"## 🤖 Codeforces Automated Briefing\n\n"
+                  f"🎯 **Problem:** [{problem_name}]({url})\n"
+                  f"📊 **Difficulty Rating:** `{rating}`\n"
+                  f"🏷️ **Algorithmic Tags:** {tags}\n\n"
+                  f"### 📄 Problem Statement\n"
+                  f"<details>\n"
+                  f"<summary><b>📖 Click to expand Full Description & Examples</b></summary>\n\n"
+                  f"#### 📝 Description\n{statement_text}\n\n"
+                  f"### 🧪 Example Test Cases\n"
+                  f"{samples_markdown}"
+                  f"</details>\n\n"
+                  f"---\n"
+                  f"*Stay Curious! Stay Consistent! & Keep Scripting! \n"
+                  f"Use the discussion space below to share your approaches, talk about complexities, more optimized solutions, or link your solution files and much more together with the community! \n"
+                  f"Happy Coding!*"
+              )
+              
+              comment = comment.replace("$$$", "$")
+              
+              with open('comment_body.txt', 'w', encoding='utf-8') as f:
+                  f.write(comment)
+              with open('problem_title.txt', 'w', encoding='utf-8') as f:
+                  f.write(problem_name)
+              print("SUCCESS: Context processing finalized.")
           else:
-              print("ERROR: Could not parse a valid Codeforces problem link or headings from the discussion post.")
+              print("ERROR: Could not resolve problem identifiers via headings or raw URL structures.")
 
       - name: Post Summary Comment & Rename Discussion
         env:
