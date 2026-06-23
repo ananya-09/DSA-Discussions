@@ -33,12 +33,14 @@ body:
     id: status
     attributes:
       label: "📊 Status"
+      description: "Select the current status of this announcement"
       options:
         - "🟢 Active"
         - "🟡 In Progress"
         - "🟠 Pending"
         - "✅ Completed"
         - "🔵 On Hold"
+      default: 0
     validations:
       required: true
 
