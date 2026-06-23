@@ -97,7 +97,7 @@ jobs:
                           f"{content_html}\n\n"
                           f"</details>\n\n"
                           f"---\n"
-                          f"*Use the discussion space below to share your approaches, talk about complexities, or link your solution files!*"
+                          f"*Stay Curious! Stay Consistent! & Keep Scripting! \n Use the discussion space below to share your approaches, talk about complexities, more optimized solutions, or link your solution files and much more together with the community! \n Happy Coding!*"
                       )
                       
                       with open('comment_body.txt', 'w', encoding='utf-8') as f:
