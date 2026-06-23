@@ -23,7 +23,7 @@ jobs:
       - name: Install Dependencies
         run: pip install requests beautifulsoup4
 
-      - name: Fetch Problem Meta & Scrape Content
+      - name: Scrape Codeforces Problem & Sample Cases
         id: fetch_meta
         env:
           DISCUSSION_BODY: ${{ github.event.discussion.body }}
@@ -36,69 +36,104 @@ jobs:
 
           body = os.getenv('DISCUSSION_BODY', '')
           
-          # Precision Regex parsing your layout
           contest_match = re.search(r'### 🔢 Contest ID\s*(?:\s*)?(\d+)', body, re.DOTALL)
           index_match = re.search(r'### 🔤 Problem Index\s*(?:\s*)?([A-Z\d]+)', body, re.DOTALL)
 
           if contest_match and index_match:
-              contest_id = int(contest_match.group(1).strip())
+              contest_id = contest_match.group(1).strip()
               index = index_match.group(1).strip().upper()
-              
-              print(f"Target Found -> Contest: {contest_id}, Index: {index}")
-              
-              # 1. Fetch Core Metadata (Rating & Tags) from API Archive
-              api_url = "https://codeforces.com/api/problemset.problems"
-              api_response = requests.get(api_url)
-              
-              rating = "Unrated"
-              tags = "`No tags assigned yet`"
-              name = f"Problem {index}"
-              
-              if api_response.status_code == 200:
-                  api_data = api_response.json()
-                  if api_data.get('status') == 'OK':
-                      problems = api_data['result']['problems']
-                      matched = next((p for p in problems if p.get('contestId') == contest_id and p.get('index') == index), None)
-                      if matched:
-                          name = matched['name']
-                          rating = matched.get('rating', 'Unrated')
-                          tags = ", ".join([f"`{t}`" for t in matched.get('tags', [])]) if matched.get('tags') else tags
-
-              # 2. Scrape Live Problem Statement & Samples using BeautifulSoup
               url = f"https://codeforces.com/contest/{contest_id}/problem/{index}"
-              page_response = requests.get(url)
               
-              description_text = ""
-              input_spec = ""
-              output_spec = ""
-              samples_text = ""
+              print(f"Targeting URL -> {url}")
+              
+              # 1. Scrape the Problem Page for Statement & Samples
+              page_response = requests.get(url)
+              statement_text = "Description unavailable."
+              samples_markdown = ""
+              problem_name = f"Problem {index}"
               
               if page_response.status_code == 200:
                   soup = BeautifulSoup(page_response.text, 'html.parser')
-                  main_div = soup.find(class_="problem-statement")
                   
-                  if main_div:
-                      # Extract structured text descriptions by skipping headers and samples
-                      for child in main_div.find_all("div", recursive=False):
-                          classes = child.get("class", []) or []
-                          if "header" in classes:
-                              continue
-                          elif "input-specification" in classes:
-                              input_spec = child.get_text(separator="\n").strip()
-                          elif "output-specification" in classes:
-                              output_spec = child.get_text(separator="\n").strip()
-                          elif any(c in classes for c in ["sample-tests", "sample-test"]):
-                              continue
-                          else:
-                              description_text += child.get_text(separator="\n").strip() + "\n\n"
+                  # Extract precise problem title
+                  title_div = soup.find('div', class_='title')
+                  if title_div:
+                      problem_name = title_div.text.strip()
+                  
+                  # Extract a clean text overview of the statement description
+                  header_div = soup.find('div', class_='problem-statement')
+                  if header_div:
+                      # Grab paragraphs inside the upper section of the problem statement
+                      paragraphs = header_div.find_all('p')
+                      if paragraphs:
+                          # Pull the first two descriptive paragraphs to keep the comment scannable
+                          statement_text = "\n\n".join([p.text.strip() for p in paragraphs[:3]])
+                  
+                  # Extract Sample Inputs & Outputs
+                  sample_test_div = soup.find('div', class_='sample-tests')
+                  if sample_test_div:
+                      inputs = sample_test_div.find_all('div', class_='input')
+                      outputs = sample_test_div.find_all('div', class_='output')
                       
-                      # Parse all available Sample Input / Output Blocks
-                      sample_div = main_div.find(class_="sample-test")
-                      if sample_div:
-                          inputs = sample_div.find_all(class_="input")
-                          outputs = sample_div.find_all(class_="output")
-                          for i in range(len(inputs)):
-                              in_text = inputs[i].find("pre").get_text(separator="\n").strip()
-                              out_text = outputs[i].find("pre").get_text(separator="\n").strip()
-                              samples_text += f"**📥 Sample Input {i+1}:**\n
-http://googleusercontent.com/immersive_entry_chip/0
+                      for i in range(len(inputs)):
+                          in_pre = inputs[i].find('pre')
+                          out_pre = outputs[i].find('pre')
+                          
+                          if in_pre and out_pre:
+                              # Handle interior formatting or line breaks cleanly
+                              in_text = in_pre.get_text(separator="\n").strip()
+                              out_text = out_pre.get_text(separator="\n").strip()
+                              
+                              samples_markdown += f"#### 📥 Sample Input {i+1}\n```text\n{in_text}\n```\n"
+                              samples_markdown += f"#### 📤 Sample Output {i+1}\n```text\n{out_text}\n```\n\n"
+
+              # 2. Query API for Official Difficulty Ratings and Tags
+              api_url = "https://codeforces.com/api/problemset.problems"
+              api_response = requests.get(api_url)
+              rating = "Unrated"
+              tags = "`No tags assigned yet`"
+              
+              if api_response.status_code == 200:
+                  data = api_response.json()
+                  if data.get('status') == 'OK':
+                      problems = data['result']['problems']
+                      matched = next((p for p in problems if p.get('contestId') == int(contest_id) and p.get('index') == index), None)
+                      if matched:
+                          rating = matched.get('rating', 'Unrated')
+                          tags = ", ".join([f"`{t}`" for t in matched.get('tags', [])]) if matched.get('tags') else tags
+
+              # 3. Assemble the Ultimate Markdown Template
+              comment = (
+                  f"## 🤖 Codeforces Automated Briefing\n\n"
+                  f"🎯 **Problem:** [{problem_name}]({url})\n"
+                  f"📊 **Difficulty Rating:** `{rating}`\n"
+                  f"🏷️ **Algorithmic Tags:** {tags}\n\n"
+                  f"### 📄 Problem Description Preview\n"
+                  f"> {statement_text}\n\n"
+                  f"### 🧪 Example Test Cases\n"
+                  f"{samples_markdown}"
+                  f"---\n"
+                  f"*Use the discussion space below to break down optimization paths or link clean repository source files!*"
+              )
+              
+              with open('comment_body.txt', 'w', encoding='utf-8') as f:
+                  f.write(comment)
+              print("SUCCESS: Full context card generated perfectly.")
+          else:
+              print("ERROR: Parsing validation parameters dropped.")
+
+      - name: Post Summary Comment to Discussion Thread
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DISCUSSION_ID: ${{ github.event.discussion.node_id }}
+        run: |
+          if [ -f comment_body.txt ]; then
+            gh api graphql -f query='
+              mutation($discussionId: ID!, $body: String!) {
+                addDiscussionComment(input: {discussionId: $discussionId, body: $body}) {
+                  comment { id }
+                }
+              }' -f discussionId="$DISCUSSION_ID" -F body=@comment_body.txt
+          else
+            echo "Skipping comment injection: No metadata generated."
+          fi
