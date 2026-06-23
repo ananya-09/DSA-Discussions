@@ -1,0 +1,127 @@
+name: 🤖 LeetCode Problem Fetcher
+
+on:
+  discussion:
+    types: [created]
+
+jobs:
+  fetch-lc-metadata:
+    if: github.event.discussion.category.slug == 'leetcode-arena'
+    runs-on: ubuntu-latest
+    permissions:
+      discussions: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install Dependencies
+        run: pip install requests
+
+      - name: Query LeetCode GraphQL API
+        id: fetch_meta
+        env:
+          DISCUSSION_BODY: ${{ github.event.discussion.body }}
+        shell: python
+        run: |
+          import os
+          import requests
+          import re
+
+          body = os.getenv('DISCUSSION_BODY', '')
+          
+          # Auto-extracts the title-slug directly from the LeetCode URL provided in the post
+          url_match = re.search(r'https://leetcode\.com/problems/([^/\s]+)', body)
+
+          if url_match:
+              title_slug = url_match.group(1).strip()
+              url = f"https://leetcode.com/problems/{title_slug}/"
+              print(f"Targeting LeetCode Slug -> {title_slug}")
+              
+              # Querying LeetCode's official GraphQL backend route
+              graphql_url = "https://leetcode.com/graphql"
+              query = """
+              query questionData($titleSlug: String!) {
+                question(titleSlug: $titleSlug) {
+                  title
+                  difficulty
+                  content
+                  topicTags {
+                    name
+                  }
+                }
+              }
+              """
+              
+              headers = {
+                  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                  "Content-Type": "application/json"
+              }
+              payload = {"query": query, "variables": {"titleSlug": title_slug}}
+              
+              response = requests.post(graphql_url, json=payload, headers=headers)
+              
+              if response.status_code == 200:
+                  res_data = response.json()
+                  q_data = res_data.get('data', {}).get('question')
+                  
+                  if q_data:
+                      title = q_data.get('title', title_slug)
+                      difficulty = q_data.get('difficulty', 'Unknown')
+                      content_html = q_data.get('content', 'Description text missing.')
+                      tags = ", ".join([f"`{t['name']}`" for t in q_data.get('topicTags', [])]) if q_data.get('topicTags') else "`None`"
+                      
+                      # Map difficulties to clean color badges using Markdown
+                      diff_badge = f"`{difficulty}`"
+                      if difficulty == "Easy":
+                          diff_badge = "🟢 **Easy**"
+                      elif difficulty == "Medium":
+                          diff_badge = "🟡 **Medium**"
+                      elif difficulty == "Hard":
+                          diff_badge = "🔴 **Hard**"
+
+                      # Assemble the automated response card
+                      comment = (
+                          f"## 🤖 LeetCode Automated Briefing\n\n"
+                          f"🎯 **Problem:** [{title}]({url})\n"
+                          f"📊 **Difficulty:** {diff_badge}\n"
+                          f"🏷️ **Topic Tags:** {tags}\n\n"
+                          f"### 📄 Problem Statement\n"
+                          f"<details>\n"
+                          f"<summary><b>📖 Click to expand Full Description & Examples</b></summary>\n\n"
+                          f"{content_html}\n\n"
+                          f"</details>\n\n"
+                          f"---\n"
+                          f"*Use the discussion space below to share your approaches, talk about complexities, or link your solution files!*"
+                      )
+                      
+                      with open('comment_body.txt', 'w', encoding='utf-8') as f:
+                          f.write(comment)
+                      print("SUCCESS: LeetCode context card compiled successfully.")
+                  else:
+                      print("ERROR: Problem not found. Check if the URL title slug is correct.")
+              else:
+                  print(f"ERROR: API Request failed with status code: {response.status_code}")
+          else:
+              print("ERROR: Could not parse a valid LeetCode problem link from the discussion post.")
+
+      - name: Post Summary Comment to Discussion Thread
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DISCUSSION_ID: ${{ github.event.discussion.node_id }}
+        run: |
+          if [ -f comment_body.txt ]; then
+            gh api graphql -f query='
+              mutation($discussionId: ID!, $body: String!) {
+                addDiscussionComment(input: {discussionId: $discussionId, body: $body}) {
+                  comment { id }
+                }
+              }' -f discussionId="$DISCUSSION_ID" -F body=@comment_body.txt
+          else
+            echo "Skipping comment injection: No metadata generated."
+          fi
