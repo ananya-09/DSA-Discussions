@@ -60,14 +60,26 @@ jobs:
                   if title_div:
                       problem_name = title_div.text.strip()
                   
-                  # Extract a clean text overview of the statement description
+                  # Extract a clean text overview of the statement description exclusively
                   header_div = soup.find('div', class_='problem-statement')
                   if header_div:
-                      # Grab paragraphs inside the upper section of the problem statement
-                      paragraphs = header_div.find_all('p')
-                      if paragraphs:
-                          # Pull the first two descriptive paragraphs to keep the comment scannable
-                          statement_text = "\n\n".join([p.text.strip() for p in paragraphs[:3]])
+                      desc_paragraphs = []
+                      # Loop only through description blocks, breaking before input/output specs
+                      for child in header_div.find_all(recursive=False):
+                          classes = child.get('class', []) or []
+                          if any(c in classes for c in ['input-specification', 'output-specification', 'sample-tests', 'sample-test']):
+                              break
+                          if 'header' in classes:
+                              continue
+                          desc_paragraphs.extend(child.find_all('p'))
+                      
+                      if desc_paragraphs:
+                          statement_text = "\n\n".join([p.text.strip() for p in desc_paragraphs[:3]])
+                      else:
+                          # Fallback to general paragraph pulling if layout varies
+                          paragraphs = header_div.find_all('p')
+                          if paragraphs:
+                              statement_text = "\n\n".join([p.text.strip() for p in paragraphs[:3]])
                   
                   # Extract Sample Inputs & Outputs
                   sample_test_div = soup.find('div', class_='sample-tests')
@@ -80,7 +92,6 @@ jobs:
                           out_pre = outputs[i].find('pre')
                           
                           if in_pre and out_pre:
-                              # Handle interior formatting or line breaks cleanly
                               in_text = in_pre.get_text(separator="\n").strip()
                               out_text = out_pre.get_text(separator="\n").strip()
                               
@@ -116,9 +127,12 @@ jobs:
                   f"*Use the discussion space below to break down optimization paths or link clean repository source files!*"
               )
               
+              # Fix: Convert Codeforces triple-dollar math boundaries to native GitHub Markdown LaTeX format
+              comment = comment.replace("$$$", "$")
+              
               with open('comment_body.txt', 'w', encoding='utf-8') as f:
                   f.write(comment)
-              print("SUCCESS: Full context card generated perfectly.")
+              print("SUCCESS: Full context card generated perfectly with LaTeX modifications.")
           else:
               print("ERROR: Parsing validation parameters dropped.")
 
