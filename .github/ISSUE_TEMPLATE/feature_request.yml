@@ -1,0 +1,38 @@
+name: Feature Request
+description: Propose a new idea, workflow automation enhancement, or structural addition to the repository.
+title: "[Feature]: <Short title for your idea>"
+labels: ["feature-request", "enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### Got a great idea to make this space better?
+        We'd love to hear it! Fill out this form to pitch your feature or automation suggestion.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Is your feature request related to a problem?
+      description: Provide a clear and concise description of what the problem or limitation is.
+      placeholder: e.g. Right now, it's difficult to see our collective study progress over time because the dashboard has to be updated manually...
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Describe the Proposed Solution
+      description: Explain exactly how you envision this feature or automation working.
+      placeholder: e.g. We can write a scheduled GitHub Action that runs every Sunday and compiles a summary table of all the solved questions into the main README...
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Any alternative solutions or workarounds you've thought about.
+      placeholder: e.g. Manually maintaining a pinned discussion thread with links, but this is tedious to update.
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context or Mockups
+      description: Add any other context, designs, screenshots, or code ideas here.
+      placeholder: e.g. Here is a rough markdown sketch of how the summary table could look...
