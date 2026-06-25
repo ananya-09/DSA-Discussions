@@ -1,0 +1,111 @@
+name: 💻 Submit a Solution Blueprint
+description: Share an optimized solution with complexity analysis, explanation, and clean commented code.
+title: "[Solution]: <Problem Name/ID>"
+labels: ["solution-submission", "community-contribution"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### Thank you for contributing to the DSA Community Arena!
+        Please fill out this interactive blueprint to help your fellow coders understand your algorithmic strategy.
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Problem Platform
+      description: Which coding arena does this problem belong to?
+      options:
+        - LeetCode
+        - Codeforces
+        - GeeksforGeeks
+        - AtCoder
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: problem-id-url
+    attributes:
+      label: Problem Link or Identifier
+      placeholder: e.g. https://leetcode.com/problems/two-sum or 2074A
+    validations:
+      required: true
+  - type: dropdown
+    id: language
+    attributes:
+      label: Implementation Language
+      description: Which language did you use to write this solution?
+      options:
+        - C++ (GCC)
+        - Java
+        - Python (3.x)
+        - Go
+        - JavaScript / TypeScript
+        - Rust
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: time-complexity
+    attributes:
+      label: Time Complexity
+      description: What is the optimal time complexity of your approach?
+      options:
+        - O(1)
+        - O(log N)
+        - O(N)
+        - O(N log N)
+        - O(N^2)
+        - O(2^N)
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: space-complexity
+    attributes:
+      label: Space Complexity
+      description: What is the auxiliary space complexity?
+      options:
+        - O(1)
+        - O(log N)
+        - O(N)
+        - O(N log N)
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: strategy
+    attributes:
+      label: 🧠 Intuition & Core Strategy
+      description: Walk us through how you designed this solution and why it works.
+      placeholder: |
+        I resolved this problem using a hash map to look up the complement values in O(1) lookup time. The key steps are...
+    validations:
+      required: true
+  - type: textarea
+    id: code
+    attributes:
+      label: 💻 Clean commented Code
+      description: Paste your fully functional, commented code inside the code block.
+      render: cpp
+      value: |
+        ```cpp
+        // Paste your clean code here
+        ```
+    validations:
+      required: true
+  - type: textarea
+    id: edge-cases
+    attributes:
+      label: 🧪 Dry Run & Edge Cases Considered
+      description: Mention any complex constraints or boundary conditions your code safely resolves (e.g., negative values, empty arrays, limits).
+      placeholder: |
+        1. Empy array / constraints boundaries checked.
+        2. Large values handled using long long types.
+  - type: checkboxes
+    id: check
+    attributes:
+      label: Quality Checklists
+      options:
+        - label: This solution passes all test cases successfully on the platform.
+          required: true
+        - label: My code contains detailed and readable comments.
+          required: true
