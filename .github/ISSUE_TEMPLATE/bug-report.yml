@@ -1,4 +1,4 @@
-name: Bug Report
+name: 🐛 Bug Report
 description: File a structured report to help us identify and fix an issue in the repo, automation, or templates.
 title: "[Bug]: <Short description of the bug>"
 labels: ["bug", "triage"]
@@ -11,7 +11,7 @@ body:
   - type: textarea
     id: reproduction
     attributes:
-      label: Steps to Reproduce
+      label: 🔄 Steps to Reproduce
       description: Explain step-by-step how we can reproduce the error.
       placeholder: |
         1. Go to Discussions
@@ -23,7 +23,7 @@ body:
   - type: textarea
     id: expected-behavior
     attributes:
-      label: Expected Behavior
+      label: 🎯 Expected Behavior
       description: What did you expect to happen?
       placeholder: e.g. The bot should parse the header and successfully post a briefing comment.
     validations:
@@ -31,7 +31,7 @@ body:
   - type: textarea
     id: actual-behavior
     attributes:
-      label: Actual Behavior
+      label: ⚠️ Actual Behavior
       description: What actually happened? Provide logs or screenshots if possible.
       placeholder: e.g. The workflow crashed with a 'Resource not accessible by integration' error on Step 4.
     validations:
@@ -39,7 +39,7 @@ body:
   - type: input
     id: workflow-run-link
     attributes:
-      label: GitHub Action Run Link (If applicable)
+      label: 🔗 GitHub Action Run Link (If applicable)
       description: If this is an automation workflow bug, link the failed action run here.
       placeholder: e.g. https://github.com/ananya-09/DSA-Discussions/actions/runs/12345678
   - type: checkboxes
