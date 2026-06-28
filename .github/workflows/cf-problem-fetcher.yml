@@ -1,8 +1,3 @@
-Yes, we can absolutely make the parser hyper-flexible so it handles **both** formats seamlessly. By updating the regular expressions to use a non-capturing alternative group `(?: ... | ... )`, the script will first look for your structured emoji headings, and if someone skips those and just types a quick shorthand like `#contest 1985` or `#problem C`, it will catch that instantly too!
-
-Here is your updated workflow file with the parser logic expanded, leaving the rest of your scrapers, fallbacks, and layouts completely untouched.
-
-```yaml
 name: 🤖 Codeforces Problem Fetcher
 
 on:
@@ -26,9 +21,9 @@ jobs:
           python-version: '3.x'
 
       - name: Install Dependencies
-        run: pip install requests beautifulsoup4
+        run: pip install requests
 
-      - name: Scrape Codeforces Problem & Sample Cases
+      - name: Fetch Problem Meta via Official API
         id: fetch_meta
         env:
           DISCUSSION_BODY: ${{ github.event.discussion.body }}
@@ -37,16 +32,15 @@ jobs:
           import os
           import requests
           import re
-          from bs4 import BeautifulSoup
 
           body = os.getenv('DISCUSSION_BODY', '')
           
           contest_id = None
           index = None
 
-          # Strategy 1: Multi-format matcher (Supports your full emoji headings, plain headings, OR quick #contest / #problem tags)
-          contest_match = re.search(r'(?:### 🔢 Contest ID|# Contest ID|#contest)\s*(?:\s*)?(\d+)', body, re.IGNORECASE)
-          index_match = re.search(r'(?:### 🔤 Problem Index|# Problem Index|#problem)\s*(?:\s*)?([A-Z\d]+)', body, re.IGNORECASE)
+          # Strategy 1: Multi-format matcher (Maintains full flexible parsing alignment)
+          contest_match = re.search(r'(?:### 🔢 Contest ID|# Contest ID|#contest|#contest id|# contest)\s*(?:\s*)?(\d+)', body, re.IGNORECASE)
+          index_match = re.search(r'(?:### 🔤 Problem Index|# Problem Index|#problem|#problem index|# problem)\s*(?:\s*)?([A-Z\d]+)', body, re.IGNORECASE)
 
           if contest_match and index_match:
               contest_id = contest_match.group(1).strip()
@@ -70,97 +64,40 @@ jobs:
           if contest_id and index:
               url = f"https://codeforces.com/contest/{contest_id}/problem/{index}"
               
-              # 1. Scrape the Problem Page for Statement & Samples
-              page_response = requests.get(url)
+              # Query API for Official Difficulty Ratings and Tags
+              api_url = "https://codeforces.com/api/problemset.problems"
+              api_response = requests.get(api_url)
+              rating = "Unrated"
+              tags = "`No tags assigned yet`"
+              problem_name = f"Problem {index}"
               
-              if page_response.status_code == 200:
-                  soup = BeautifulSoup(page_response.text, 'html.parser')
-                  statement_text = "Description unavailable."
-                  samples_markdown = ""
-                  problem_name = f"Problem {index}"
-                  
-                  title_div = soup.find('div', class_='title')
-                  if title_div:
-                      problem_name = title_div.text.strip()
-                  
-                  header_div = soup.find('div', class_='problem-statement')
-                  if header_div:
-                      desc_paragraphs = []
-                      for child in header_div.find_all(recursive=False):
-                          classes = child.get('class', []) or []
-                          if any(c in classes for c in ['input-specification', 'output-specification', 'sample-tests', 'sample-test']):
-                              break
-                          if 'header' in classes:
-                              continue
-                          desc_paragraphs.extend(child.find_all('p'))
-                      
-                      if desc_paragraphs:
-                          statement_text = "\n\n".join([p.text.strip() for p in desc_paragraphs])
-                      else:
-                          paragraphs = header_div.find_all('p')
-                          if paragraphs:
-                              statement_text = "\n\n".join([p.text.strip() for p in paragraphs])
-                  
-                  sample_test_div = soup.find('div', class_='sample-tests')
-                  if sample_test_div:
-                      inputs = sample_test_div.find_all('div', class_='input')
-                      outputs = sample_test_div.find_all('div', class_='output')
-                      
-                      for i in range(len(inputs)):
-                          in_pre = inputs[i].find('pre')
-                          out_pre = outputs[i].find('pre')
-                          
-                          if in_pre and out_pre:
-                              in_text = in_pre.get_text(separator="\n").strip()
-                              out_text = out_pre.get_text(separator="\n").strip()
-                              
-                              samples_markdown += f"#### 📥 Sample Input {i+1}\n```text\n{in_text}\n```\n"
-                              samples_markdown += f"#### 📤 Sample Output {i+1}\n```text\n{out_text}\n```\n\n"
+              if api_response.status_code == 200:
+                  data = api_response.json()
+                  if data.get('status') == 'OK':
+                      problems = data['result']['problems']
+                      matched = next((p for p in problems if p.get('contestId') == int(contest_id) and p.get('index') == index), None)
+                      if matched:
+                          rating = matched.get('rating', 'Unrated')
+                          problem_name = matched.get('name', problem_name)
+                          tags = ", ".join([f"`{t}`" for t in matched.get('tags', [])]) if matched.get('tags') else tags
 
-                  # 2. Query API for Official Difficulty Ratings and Tags
-                  api_url = "https://codeforces.com/api/problemset.problems"
-                  api_response = requests.get(api_url)
-                  rating = "Unrated"
-                  tags = "`No tags assigned yet`"
-                  
-                  if api_response.status_code == 200:
-                      data = api_response.json()
-                      if data.get('status') == 'OK':
-                          problems = data['result']['problems']
-                          matched = next((p for p in problems if p.get('contestId') == int(contest_id) and p.get('index') == index), None)
-                          if matched:
-                              rating = matched.get('rating', 'Unrated')
-                              problem_name = matched.get('name', problem_name)
-                              tags = ", ".join([f"`{t}`" for t in matched.get('tags', [])]) if matched.get('tags') else tags
-
-                  # 3. Assemble Layout matching LeetCode structure and design
+                  # Assemble clean, scannable layout matching your formatting exact design
                   comment = (
                       f"## 🤖 Codeforces Automated Briefing\n\n"
                       f"🎯 **Problem:** [{problem_name}]({url})\n"
                       f"📊 **Difficulty Rating:** `{rating}`\n"
                       f"🏷️ **Algorithmic Tags:** {tags}\n\n"
-                      f"### 📄 Problem Statement\n"
-                      f"<details>\n"
-                      f"<summary><b>📖 Click to expand Full Description & Examples</b></summary>\n\n"
-                      f"#### 📝 Description\n{statement_text}\n\n"
-                      f"### 🧪 Example Test Cases\n"
-                      f"{samples_markdown}"
-                      f"</details>\n\n"
                       f"---\n"
                       f"Use the discussion space below to share your approaches, talk about complexities, more optimized solutions, or link your solution files and much more together with the community! \n"
                       f"Happy Coding!*"
                   )
                   
-                  comment = comment.replace("$$$", "$")
-                  
                   with open('comment_body.txt', 'w', encoding='utf-8') as f:
                       f.write(comment)
                       
-                  print("SUCCESS: Codeforces context card compiled successfully.")
-              elif page_response.status_code == 404:
-                  print("ERROR: Problem not found. Check if the Contest ID or Problem Index is correct.")
+                  print("SUCCESS: Streamlined context card compiled successfully.")
               else:
-                  print(f"ERROR: API Request failed with status code: {page_response.status_code}")
+                  print(f"ERROR: API Request failed with status code: {api_response.status_code}")
           else:
               print("ERROR: Could not parse a valid Codeforces problem link or headings from the discussion post.")
 
@@ -179,5 +116,3 @@ jobs:
           else
             echo "Skipping comment injection: No metadata generated."
           fi
-
-```
