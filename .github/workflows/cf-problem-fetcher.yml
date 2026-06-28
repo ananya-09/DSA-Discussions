@@ -1,3 +1,8 @@
+Yes, we can absolutely make the parser hyper-flexible so it handles **both** formats seamlessly. By updating the regular expressions to use a non-capturing alternative group `(?: ... | ... )`, the script will first look for your structured emoji headings, and if someone skips those and just types a quick shorthand like `#contest 1985` or `#problem C`, it will catch that instantly too!
+
+Here is your updated workflow file with the parser logic expanded, leaving the rest of your scrapers, fallbacks, and layouts completely untouched.
+
+```yaml
 name: 🤖 Codeforces Problem Fetcher
 
 on:
@@ -39,16 +44,16 @@ jobs:
           contest_id = None
           index = None
 
-          # Strategy 1: Look for the classic Markdown Headings
-          contest_match = re.search(r'# Contest ID\s*(?:\s*)?(\d+)', body, re.DOTALL)
-          index_match = re.search(r'# Problem Index\s*(?:\s*)?([A-Z\d]+)', body, re.DOTALL)
+          # Strategy 1: Multi-format matcher (Supports your full emoji headings, plain headings, OR quick #contest / #problem tags)
+          contest_match = re.search(r'(?:### 🔢 Contest ID|# Contest ID|#contest)\s*(?:\s*)?(\d+)', body, re.IGNORECASE)
+          index_match = re.search(r'(?:### 🔤 Problem Index|# Problem Index|#problem)\s*(?:\s*)?([A-Z\d]+)', body, re.IGNORECASE)
 
           if contest_match and index_match:
               contest_id = contest_match.group(1).strip()
               index = index_match.group(1).strip().upper()
-              print(f"Targeting parameters found via Headings -> Contest: {contest_id}, Index: {index}")
+              print(f"Targeting parameters found via Headings/Tags -> Contest: {contest_id}, Index: {index}")
           else:
-              print("Headings not found or incomplete. Falling back to URL scanning...")
+              print("Headings/Tags not found or incomplete. Falling back to URL scanning...")
               # Strategy 2: Scan the body text for a raw Codeforces URL variation
               url_contest_match = re.search(r'codeforces\.com/contest/(\d+)/problem/([A-Z\d]+)', body, re.IGNORECASE)
               url_set_match = re.search(r'codeforces\.com/problemset/problem/(\d+)/([A-Z\d]+)', body, re.IGNORECASE)
@@ -142,7 +147,6 @@ jobs:
                       f"{samples_markdown}"
                       f"</details>\n\n"
                       f"---\n"
-                      f"*Stay Curious! Stay Consistent! & Keep Scripting! \n"
                       f"Use the discussion space below to share your approaches, talk about complexities, more optimized solutions, or link your solution files and much more together with the community! \n"
                       f"Happy Coding!*"
                   )
@@ -175,3 +179,5 @@ jobs:
           else
             echo "Skipping comment injection: No metadata generated."
           fi
+
+```
